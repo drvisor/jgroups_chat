@@ -21,4 +21,7 @@ from command line:
     
 Parameters userName, clusterName and jgroupsConfigName are optional. They will be configured by default if they are omitted in cmd line.    
 Parameter '-Xmx8M' is required to specify how much memory you will give to the java process. I recommend to specify some value because 
-otherwise java will proceed with default size which is a quarter of physical memory (and it may be  too much for this app).   
+otherwise java will proceed with default size which is a quarter of physical memory (and it may be  too much for this app).
+
+## Screeshots
+![Two instances of app](jgroups_chat_screenshot.png)   
