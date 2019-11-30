@@ -2,7 +2,7 @@
 
 ## Overview
 
-This simple app can be used to test different JGroups configuration([http://www.jgroups.org/index.html]).
+This simple app can be used to test different JGroups configurations([http://www.jgroups.org/index.html]).
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ JDK/JRE 11
 
 ## Usage
 
-from command line:
+From command line:
     java -Xmx8M -jar jgroups_chat-1.0-SNAPSHOT-jar-with-dependencies.jar userName clusterName jgroupsConfigName
     
 Parameters userName, clusterName and jgroupsConfigName are optional. They will be configured by default if they are omitted in cmd line.    
