@@ -8,6 +8,7 @@ import javax.swing.*;
 import javax.swing.border.TitledBorder;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -35,13 +36,14 @@ public class ChatLauncher extends JFrame {
         setTitle(TITLE_PREFIX);
         configureUI();
 
-        userName = System.getProperty("usrName");
+        userName = args.length > 0 ? args[0] : null;
         if (userName == null) {
+            LOG.info("Usage: java -jar jgroups_chat.jar <userName> <clusterName> <configName>");
             userName = JOptionPane.showInputDialog(null, "Input your chat user name");
             if (userName == null) System.exit(0);
-            setTitle(TITLE_PREFIX + " - " + userName);
         }
-        LOG.info("Launching with -DusrName={} and args={}", userName, Arrays.toString(args));
+        setTitle(TITLE_PREFIX + " - " + userName);
+
         try {
             initJGroups(args);
         } catch (Exception e) {
@@ -51,7 +53,8 @@ public class ChatLauncher extends JFrame {
 
     private void configureUI() {
         JPanel pnlMain = new JPanel(new BorderLayout(5, 5));
-        JScrollPane sc = new JScrollPane();
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        JScrollPane scHistory = new JScrollPane();
         history = new JTextArea();
         textField = new JTextField();
         JPanel footer = new JPanel(new BorderLayout(5, 5));
@@ -64,18 +67,24 @@ public class ChatLauncher extends JFrame {
         history.setEditable(false);
         history.setBorder(new TitledBorder("History"));
         scParticipants.setViewportView(participants);
-        sc.setViewportView(history);
+        scHistory.setViewportView(history);
         footer.setBorder(new TitledBorder("Message"));
         textField.setAction(sendAction);
+        textField.setToolTipText("Press Enter to send");
+        splitPane.setDividerLocation(200);
+        splitPane.setResizeWeight(1.0);
+
 
         setContentPane(pnlMain);
         setMinimumSize(new Dimension(600, 200));
 
-        pnlMain.add(scParticipants, BorderLayout.WEST);
-        pnlMain.add(sc, BorderLayout.CENTER);
-        pnlMain.add(footer, BorderLayout.SOUTH);
+
+        splitPane.setLeftComponent(scParticipants);
+        splitPane.setRightComponent(scHistory);
+        pnlMain.add(splitPane, BorderLayout.CENTER);
         footer.add(textField, BorderLayout.CENTER);
         footer.add(btnSend, BorderLayout.EAST);
+        pnlMain.add(footer, BorderLayout.SOUTH);
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         pack();
@@ -84,16 +93,17 @@ public class ChatLauncher extends JFrame {
     }
 
     private void initJGroups(String[] args) throws Exception {
-        String clusterName = (args.length > 0 ? args[0] : DEFAULT_CHAT_CLUSTER_NAME);
-        String configName = (args.length > 1 ? args[1] : DEFAULT_JGROUPS_CONFIG);
+        String clusterName = (args.length > 1 ? args[1] : DEFAULT_CHAT_CLUSTER_NAME);
+        String configName = (args.length > 2 ? args[2] : DEFAULT_JGROUPS_CONFIG);
         LOG.info("Starting with clusterName={}, configName={}", clusterName, configName);
-        LOG.info("Usage: java -jar jgroups_chat.jar <clusterName> <configName>");
         jChannel = new JChannel(configName);
         jChannel.setReceiver(new ReceiverAdapter() {
             @Override
             public void receive(Message msg) {
                 LOG.debug("received: {}", msg);
                 addToHistory(msg.getSrc().toString() + "->" + msg.getDest() + ":" + new String(msg.getBuffer()));
+                ChatLauncher.this.setVisible(true);
+                ChatLauncher.this.requestFocus();
             }
 
             @Override
@@ -114,7 +124,7 @@ public class ChatLauncher extends JFrame {
     }
 
     private void addToHistory(String str) {
-        history.append(str + "\n");
+        history.append(LocalDateTime.now() + " " + str + "\n");
         history.setCaretPosition(history.getDocument().getLength());
     }
 
