@@ -12,6 +12,9 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
+/**
+ * Documentation: http://www.jgroups.org/tutorial5/index.html
+ */
 public class ChatLauncher extends JFrame {
     private static final Logger LOG = LoggerFactory.getLogger(ChatLauncher.class);
     private static final String TITLE_PREFIX = "JGroups chat";
@@ -97,11 +100,11 @@ public class ChatLauncher extends JFrame {
         String configName = (args.length > 2 ? args[2] : DEFAULT_JGROUPS_CONFIG);
         LOG.info("Starting with clusterName={}, configName={}", clusterName, configName);
         jChannel = new JChannel(configName);
-        jChannel.setReceiver(new ReceiverAdapter() {
+        jChannel.setReceiver(new Receiver() {
             @Override
             public void receive(Message msg) {
                 LOG.debug("received: {}", msg);
-                addToHistory(msg.getSrc().toString() + "->" + msg.getDest() + ":" + new String(msg.getBuffer()));
+                addToHistory(msg.getSrc().toString() + "->" + msg.getDest() + ":" + msg.getObject());
                 ChatLauncher.this.setVisible(true);
                 ChatLauncher.this.requestFocus();
             }
@@ -120,7 +123,6 @@ public class ChatLauncher extends JFrame {
         jChannel.setDiscardOwnMessages(true);
         jChannel.connect(clusterName);
         Runtime.getRuntime().addShutdownHook(new Thread(() -> jChannel.close()));
-
     }
 
     private void addToHistory(String str) {
@@ -150,13 +152,14 @@ public class ChatLauncher extends JFrame {
         @Override
         public void actionPerformed(ActionEvent actionEvent) {
             Address selected = participants.getSelectedValue();
-            Message msg = new Message(selected, textField.getText());
+            Message msg = new ObjectMessage(selected, textField.getText());
             try {
                 jChannel.send(msg);
             } catch (Exception e) {
-                e.printStackTrace();
+                LOG.error("Error while sending", e);
             }
             addToHistory("Me->" + selected + ":" + textField.getText());
+            textField.setText("");
         }
     }
 }
