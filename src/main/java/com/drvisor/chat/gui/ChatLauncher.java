@@ -77,10 +77,8 @@ public class ChatLauncher extends JFrame {
         splitPane.setDividerLocation(200);
         splitPane.setResizeWeight(1.0);
 
-
         setContentPane(pnlMain);
         setMinimumSize(new Dimension(600, 200));
-
 
         splitPane.setLeftComponent(scParticipants);
         splitPane.setRightComponent(scHistory);
